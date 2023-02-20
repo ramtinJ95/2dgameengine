@@ -1,0 +1,34 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-std=c++17",
+      "-I./libs/",
+      "-I/usr/local/include",
+      "-o",
+      "gameengine",
+      "src/Game.cpp"
+    ],
+    "directory": "/Users/ramtin/workspace/2dgameengine",
+    "file": "/Users/ramtin/workspace/2dgameengine/src/Game.cpp",
+    "output": "/Users/ramtin/workspace/2dgameengine/gameengine"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-Wall",
+      "-std=c++17",
+      "-I./libs/",
+      "-I/usr/local/include",
+      "-o",
+      "gameengine",
+      "src/Main.cpp"
+    ],
+    "directory": "/Users/ramtin/workspace/2dgameengine",
+    "file": "/Users/ramtin/workspace/2dgameengine/src/Main.cpp",
+    "output": "/Users/ramtin/workspace/2dgameengine/gameengine"
+  }
+]
