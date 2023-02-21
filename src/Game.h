@@ -13,6 +13,7 @@ class Game {
         Game(); // constructor
         ~Game(); // this is a destructor
         void Initialize();
+        void Setup();
         void Run();
         void Update();
         void Render();
