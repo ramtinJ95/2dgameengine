@@ -5,6 +5,8 @@
 #include "SDL2/SDL_video.h"
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
+#include "../Components/TransformComponent.h"
+#include "../Components/RigidBodyComponent.h" // maybe have one header file with all components this could get bothersome.
 #include <iostream>
 #include <memory>
 #include "../ECS/ECS.h"
@@ -75,8 +77,9 @@ void Game::Setup() {
     playerVelocity = glm::vec2(100.0, 10.0);
 
     Entity tank = registry->CreateEntity();
-    Entity truck= registry->CreateEntity();
 
+    registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
+    registry->AddComponent<RigidBodyComponent>(tank, glm::vec2(50.0, 0.0));
 }
 
 void Game::Update(){

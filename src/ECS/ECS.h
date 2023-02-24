@@ -3,11 +3,13 @@
 
 #include <bitset>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 #include "set"
 #include "typeindex"
 #include "unordered_map"
+#include "../Logger/Logger.h"
 const unsigned int MAX_COMPONENTS = 32;
 
 typedef std::bitset<MAX_COMPONENTS> Signature;
@@ -22,11 +24,12 @@ struct IComponent {
 // Used to assign a unique id to a component type
 template <typename T>
 class Component: public IComponent{
-    static int GetId() {
-	// Return the unique id of Component<T>
-	static auto id = nextId++;
-	return id;
-    }
+    public:
+        static int GetId() {
+	    // Return the unique id of Component<T>
+	    static auto id = nextId++;
+	    return id;
+        }
 };
 
 class Entity {
@@ -77,7 +80,7 @@ class IPool {
 
 
 template<typename T>
-class Pool: IPool {
+class Pool: public IPool {
     private:
 	std::vector<T> data;
 
@@ -177,8 +180,8 @@ TSystem& Registry::GetSystem() const {
 
 template<typename TComponent, typename ...TArgs> 
 void Registry::AddComponent(Entity entity, TArgs&& ...args) {
-    const int componentId = Component<TComponent>::GetId();
-    const int entityId = entity.GetId();
+    const auto componentId = Component<TComponent>::GetId();
+    const auto entityId = entity.GetId();
 
     if (componentId >= componentPools.size()) {
 	// reason for 5 is we dont want to allocate too much extra memory
@@ -203,21 +206,22 @@ void Registry::AddComponent(Entity entity, TArgs&& ...args) {
     componentPool->Set(entityId, newComponent);
 
     entityComponentSignatures[entityId].set(componentId);
+    Logger::Log("Component id = " + std::to_string(componentId) + " was added to entity id " + std::to_string(entityId));
 
 }
 
 template<typename TComponent>
 void Registry::RemoveComponent(Entity entity) {
-    const int componentId = Component<TComponent>::GetId();
-    const int entityId = entity.GetId();
+    const auto componentId = Component<TComponent>::GetId();
+    const auto entityId = entity.GetId();
 
     entityComponentSignatures[entityId].set(componentId, false);
 }
 
 template<typename TComponent>
 bool Registry::HasComponent(Entity entity) {
-    const int componentId = Component<TComponent>::GetId();
-    const int entityId = entity.GetId();
+    const auto componentId = Component<TComponent>::GetId();
+    const auto entityId = entity.GetId();
 
     return entityComponentSignatures[entityId].test(componentId);
 }
