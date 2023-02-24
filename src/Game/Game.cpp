@@ -6,10 +6,12 @@
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 #include <iostream>
+#include "../ECS/ECS.h"
 #include "../Logger/Logger.h"
 
 Game::Game() {
     isRunning = false;
+    registry = new Registry();
     Logger::Log("Game constructor called");
 }
 
@@ -70,6 +72,10 @@ glm::vec2 playerVelocity;
 void Game::Setup() {
     playerPos = glm::vec2(10.0, 20.0);
     playerVelocity = glm::vec2(100.0, 10.0);
+
+    Entity tank = registry->CreateEntity();
+    Entity truck= registry->CreateEntity();
+
 }
 
 void Game::Update(){
