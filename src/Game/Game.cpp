@@ -6,12 +6,13 @@
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <memory>
 #include "../ECS/ECS.h"
 #include "../Logger/Logger.h"
 
 Game::Game() {
     isRunning = false;
-    registry = new Registry();
+    registry = std::make_unique<Registry>();
     Logger::Log("Game constructor called");
 }
 

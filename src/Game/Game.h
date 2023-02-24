@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include <SDL2/SDL.h>
+#include <memory>
 #include "../ECS/ECS.h"
 const int FPS = 600;
 const int MILLISECS_PER_FRAME = 1000 / FPS;
@@ -13,7 +14,7 @@ class Game {
         SDL_Window* window; 
         SDL_Renderer* renderer;
         
-        Registry* registry;
+        std::unique_ptr<Registry> registry;
 
     public:
         Game(); // constructor
