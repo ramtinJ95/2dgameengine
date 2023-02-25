@@ -47,6 +47,7 @@ Entity Registry::CreateEntity() {
     entityId = numEntitets++;
     
     Entity entity(entityId);
+    entity.registry = this; // we are inte Registry namespace, i.e Registry class. So the this keyword is the object pointer.
     entitiesToBeAdded.insert((entity));
 
     if(entityId >= entityComponentSignatures.size()) {

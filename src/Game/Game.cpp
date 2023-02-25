@@ -78,8 +78,14 @@ void Game::Setup() {
 
     Entity tank = registry->CreateEntity();
 
-    registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
-    registry->AddComponent<RigidBodyComponent>(tank, glm::vec2(50.0, 0.0));
+    // registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
+    // registry->AddComponent<RigidBodyComponent>(tank, glm::vec2(50.0, 0.0));
+    //
+    // The Entity templates with the Registry class pointer in the Entity class allows me to change above code to
+    // A syntax that feels more natural and looks more like unity stuff
+    tank.AddComponent<TransformComponent>(glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
+    tank.AddComponent<RigidBodyComponent>(glm::vec2(50.0, 0.0));
+    tank.RemoveComponent<TransformComponent>();
 }
 
 void Game::Update(){
