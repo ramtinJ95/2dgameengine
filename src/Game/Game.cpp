@@ -2,9 +2,12 @@
 #include <SDL2/SDL_image.h>
 #include "SDL2/SDL_render.h"
 #include "SDL2/SDL_surface.h"
+#include "../Components/SpriteComponent.h"
 #include "SDL2/SDL_video.h"
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
+#include "../Systems/MovementSystem.h"
+#include "../Systems//RenderSystem.h"
 #include "../Components/TransformComponent.h"
 #include "../Components/RigidBodyComponent.h" // maybe have one header file with all components this could get bothersome.
 #include <iostream>
@@ -69,13 +72,12 @@ void Game::ProcessInput(){
     }
 }
 
-glm::vec2 playerPos;
-glm::vec2 playerVelocity;
 
 void Game::Setup() {
-    playerPos = glm::vec2(10.0, 20.0);
-    playerVelocity = glm::vec2(100.0, 10.0);
 
+    registry->AddSystem<MovementSystem>();
+    registry->AddSystem<RenderSystem>();
+    
     Entity tank = registry->CreateEntity();
 
     // registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
@@ -85,7 +87,7 @@ void Game::Setup() {
     // A syntax that feels more natural and looks more like unity stuff
     tank.AddComponent<TransformComponent>(glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(50.0, 0.0));
-    tank.RemoveComponent<TransformComponent>();
+    tank.AddComponent<SpriteComponent>(10,10);
 }
 
 void Game::Update(){
@@ -98,29 +100,18 @@ void Game::Update(){
     double deltaTime = (SDL_GetTicks() - millisecsPreviousFrame) / 1000.0;
     millisecsPreviousFrame = SDL_GetTicks(); // store "previous" frame
  
-    playerPos.x += playerVelocity.x * deltaTime;
-    playerPos.y += playerVelocity.y * deltaTime;
+    // Update the registry to process the enities that are wating to be created/deleted. 
+    registry->Update();
+    
+    registry->GetSystem<MovementSystem>().Update(deltaTime);
 }
 
 void Game::Render(){
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
-
-    // Loads a PNG texture
-    SDL_Surface* surface = IMG_Load("./assets/images/tank-tiger-right.png");
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
     
-    // What is the destination rect that we want to place our textur What is the destination rect that we want to place our texture
-
-    SDL_Rect destinationRect = {
-        static_cast<int>(playerPos.x), 
-        static_cast<int>(playerPos.y), 
-        32, 
-        32};
-    SDL_RenderCopy(renderer, texture, NULL, &destinationRect);
-    SDL_DestroyTexture(texture);
-
+    registry->GetSystem<RenderSystem>().Update(renderer);
+    
     SDL_RenderPresent(renderer); // this has dubbel buffer rendering built in
 }
 
