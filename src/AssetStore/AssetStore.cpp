@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include "../Logger/Logger.h"
 #include <SDL2/SDL.h>
+#include <string>
 AssetStore::AssetStore() {
     Logger::Log("AssetStore constructor called.");
 }
@@ -20,7 +21,6 @@ void AssetStore::ClearAssets() {
 
 void AssetStore::AddTexture(SDL_Renderer* renderer, const std::string& assetId, const std::string& filePath) {
     SDL_Surface* surface = IMG_Load(filePath.c_str());
-    if(surface == nullptr) Logger::Log("ur pointing to null donkey");
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
 
