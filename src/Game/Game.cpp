@@ -1,9 +1,6 @@
 #include "Game.h" // no need for angle brackets since the header that we want is in this same folder
 #include <SDL2/SDL_image.h>
-#include "SDL2/SDL_render.h"
-#include "SDL2/SDL_surface.h"
 #include "../Components/SpriteComponent.h"
-#include "SDL2/SDL_video.h"
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 #include "../Systems/MovementSystem.h"
@@ -13,11 +10,13 @@
 #include <iostream>
 #include <memory>
 #include "../ECS/ECS.h"
+#include "../AssetStore/AssetStore.h"
 #include "../Logger/Logger.h"
 
 Game::Game() {
     isRunning = false;
     registry = std::make_unique<Registry>();
+    assetStore = std::make_unique<AssetStore>();
     Logger::Log("Game constructor called");
 }
 
@@ -78,8 +77,11 @@ void Game::Setup() {
     registry->AddSystem<MovementSystem>();
     registry->AddSystem<RenderSystem>();
     
-    Entity tank = registry->CreateEntity();
+    // Add assets to the asset store
+    assetStore->AddTexture(renderer, "tank-image", "./assets/image/tank-panther-right.png");
+    assetStore->AddTexture(renderer, "truck-image", "./assets/image/truck-ford-right.png");
 
+    Entity tank = registry->CreateEntity();
     // registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
     // registry->AddComponent<RigidBodyComponent>(tank, glm::vec2(50.0, 0.0));
     //
@@ -87,7 +89,7 @@ void Game::Setup() {
     // A syntax that feels more natural and looks more like unity stuff
     tank.AddComponent<TransformComponent>(glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
     tank.AddComponent<RigidBodyComponent>(glm::vec2(50.0, 0.0));
-    tank.AddComponent<SpriteComponent>(10,10);
+    tank.AddComponent<SpriteComponent>("tank-image", 32, 32);
 }
 
 void Game::Update(){
@@ -110,7 +112,7 @@ void Game::Render(){
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
     
-    registry->GetSystem<RenderSystem>().Update(renderer);
+    registry->GetSystem<RenderSystem>().Update(renderer, assetStore);
     
     SDL_RenderPresent(renderer); // this has dubbel buffer rendering built in
 }
