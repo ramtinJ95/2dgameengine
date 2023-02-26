@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include "../Components/SpriteComponent.h"
 #include <SDL2/SDL.h>
+#include <fstream>
 #include <glm/glm.hpp>
 #include "../Systems/MovementSystem.h"
 #include "../Systems//RenderSystem.h"
@@ -50,7 +51,7 @@ void Game::Initialize(){
         Logger::Err("Error creating SDL rendere");
         return;
     }
-    // SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
     isRunning = true;
 }
 
@@ -80,6 +81,30 @@ void Game::Setup() {
     // Add assets to the asset store
     assetStore->AddTexture(renderer, "tank-image", "./assets/images/tank-panther-right.png");
     assetStore->AddTexture(renderer, "truck-image", "./assets/images/truck-ford-right.png");
+    assetStore->AddTexture(renderer,"tilemap-image","./assets/tilemaps/jungle.png");
+// TODO: rewrite this entire setup method to be much more flexible, but right now more systems needs to be implemented first
+    int tileSize = 32;
+    double tileScale = 1.0;
+    int mapNumCols = 25;
+    int mapNumRows =20;
+    std::fstream mapFile;
+    mapFile.open("./assets/tilemaps/jungle.map");
+
+    for (int i = 0; i < mapNumRows; i++) {
+        for (int j = 0; j < mapNumCols; j++) {
+            char ch;
+            mapFile.get(ch);
+            int srcRectY = std::atoi(&ch) * tileSize;
+            mapFile.get(ch);
+            int srcRectX = std::atoi(&ch) * tileSize;
+            mapFile.ignore();
+
+            Entity tile = registry->CreateEntity();
+            tile.AddComponent<TransformComponent>(glm::vec2(j * (tileScale * tileSize), i * (tileScale * tileSize)), glm::vec2(tileScale, tileScale), 0.0);
+            tile.AddComponent<SpriteComponent>("tilemap-image", tileSize, tileSize, srcRectX, srcRectY);
+        }
+    }
+    mapFile.close();
 
     Entity tank = registry->CreateEntity();
     // registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
