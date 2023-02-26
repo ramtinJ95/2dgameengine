@@ -6,6 +6,7 @@
 #include "../Components/SpriteComponent.h"
 #include "../AssetStore/AssetStore.h"
 #include <SDL2/SDL.h>
+#include <vector>
 
 class RenderSystem: public System {
     public:
@@ -15,10 +16,27 @@ class RenderSystem: public System {
         }
 
         void Update(SDL_Renderer* renderer, std::unique_ptr<AssetStore>& assetStore) {
-            // Loop all entities that the system is interested in
+            // TODO: for now sorting everything each frame, but i suspect this will be a huge performance bottleneck that i will have to fix soon
+            
+            struct RenderableEntity {
+                TransformComponent transformComponent;
+                SpriteComponent spriteComponent;
+            };
+            std::vector<RenderableEntity> renderableEntites;
             for (auto entity: GetSystemEntities()) {
-                const auto transform = entity.GetComponent<TransformComponent>();
-                const auto sprite = entity.GetComponent<SpriteComponent>();
+                RenderableEntity renderableEntity;
+                renderableEntity.spriteComponent = entity.GetComponent<SpriteComponent>();
+                renderableEntity.transformComponent = entity.GetComponent<TransformComponent>();
+                renderableEntites.emplace_back(renderableEntity);
+            }
+            std::sort(renderableEntites.begin(), renderableEntites.end(), [](const RenderableEntity& a, const RenderableEntity& b) {
+                    return a.spriteComponent.zIndex < b.spriteComponent.zIndex;
+                });
+
+            // Loop all entities that the system is interested in
+            for (auto entity: renderableEntites) {
+                const auto transform = entity.transformComponent;
+                const auto sprite = entity.spriteComponent;
 
                 // Set the source rectangle of our original sprite texture
                 SDL_Rect srcRect = sprite.srcRect;

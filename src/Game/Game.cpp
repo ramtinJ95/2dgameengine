@@ -101,20 +101,25 @@ void Game::Setup() {
 
             Entity tile = registry->CreateEntity();
             tile.AddComponent<TransformComponent>(glm::vec2(j * (tileScale * tileSize), i * (tileScale * tileSize)), glm::vec2(tileScale, tileScale), 0.0);
-            tile.AddComponent<SpriteComponent>("tilemap-image", tileSize, tileSize, srcRectX, srcRectY);
+            tile.AddComponent<SpriteComponent>("tilemap-image", tileSize, tileSize, 0, srcRectX, srcRectY);
         }
     }
     mapFile.close();
 
     Entity tank = registry->CreateEntity();
+    Entity truck = registry->CreateEntity();
     // registry->AddComponent<TransformComponent>(tank, glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
     // registry->AddComponent<RigidBodyComponent>(tank, glm::vec2(50.0, 0.0));
     //
     // The Entity templates with the Registry class pointer in the Entity class allows me to change above code to
     // A syntax that feels more natural and looks more like unity stuff
     tank.AddComponent<TransformComponent>(glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
-    tank.AddComponent<RigidBodyComponent>(glm::vec2(50.0, 0.0));
-    tank.AddComponent<SpriteComponent>("tank-image", 32, 32);
+    tank.AddComponent<RigidBodyComponent>(glm::vec2(2.0, 0.0));
+    tank.AddComponent<SpriteComponent>("tank-image", 32, 32, 2);
+
+    truck.AddComponent<TransformComponent>(glm::vec2(10.0, 30.0), glm::vec2(1.0, 1.0), 0.0);
+    truck.AddComponent<RigidBodyComponent>(glm::vec2(1.0, 0.0));
+    truck.AddComponent<SpriteComponent>("truck-image", 32, 32, 1);
 }
 
 void Game::Update(){
