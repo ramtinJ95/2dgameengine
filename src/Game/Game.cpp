@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include "../Systems/MovementSystem.h"
 #include "../Systems/CollisionSystem.h"
+#include "../Systems/RenderColliderSystem.h"
 #include "../Systems//RenderSystem.h"
 #include "../Systems/AnimationSystem.h"
 #include "../Components/TransformComponent.h"
@@ -20,6 +21,7 @@
 
 Game::Game() {
     isRunning = false;
+    isDebug = false;
     registry = std::make_unique<Registry>();
     assetStore = std::make_unique<AssetStore>();
     Logger::Log("Game constructor called");
@@ -71,6 +73,9 @@ void Game::ProcessInput(){
                 if(sdlEvent.key.keysym.sym == SDLK_ESCAPE){
                     isRunning = false;
                 }
+                if (sdlEvent.key.keysym.sym == SDLK_d) {
+                    isDebug = !isDebug;
+                }
                 break;
         }
     }
@@ -81,6 +86,7 @@ void Game::Setup() {
 
     registry->AddSystem<MovementSystem>();
     registry->AddSystem<RenderSystem>();
+    registry->AddSystem<RenderColliderSystem>();
     registry->AddSystem<AnimationSystem>();
     registry->AddSystem<CollisionSystem>();
     
@@ -168,6 +174,9 @@ void Game::Render(){
     SDL_RenderClear(renderer);
     
     registry->GetSystem<RenderSystem>().Update(renderer, assetStore);
+    if (isDebug) {
+        registry->GetSystem<RenderColliderSystem>().Update(renderer);
+    }
     
     SDL_RenderPresent(renderer); // this has dubbel buffer rendering built in
 }
