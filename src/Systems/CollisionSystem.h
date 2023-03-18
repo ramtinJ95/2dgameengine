@@ -26,6 +26,8 @@ public:
 		}
 		bool collisionHappned = CheckAABBCollision(a, b);
 		if(collisionHappned) {
+		    a.Kill();
+		    b.Kill();
 		    Logger::Log("Entity " + std::to_string(a.GetId()) + " is colliding with entity " + std::to_string(b.GetId()));
 		}
 	    }

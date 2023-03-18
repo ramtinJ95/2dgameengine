@@ -9,6 +9,10 @@ int Entity::GetId() const {
     return id;
 }
 
+void Entity::Kill() {
+    registry->KillEntity(*this);
+}
+
 void System::AddEntityToSystem(Entity entity) {
     entities.push_back(entity);
 }
@@ -44,19 +48,34 @@ const Signature& System::GetComponentSignature() const {
 
 Entity Registry::CreateEntity() {
     int entityId;
-    entityId = numEntitets++;
-    
+    if (freeIds.empty()) {
+        entityId = numEntitets++;
+        if(entityId >= entityComponentSignatures.size()) {
+            entityComponentSignatures.resize(entityId + 1); // TODO this is wasting memory potentially.
+        }
+    } else {
+        entityId = freeIds.front();
+        freeIds.pop_front();
+    }
+
     Entity entity(entityId);
     entity.registry = this; // we are inte Registry namespace, i.e Registry class. So the this keyword is the object pointer.
     entitiesToBeAdded.insert((entity));
 
-    if(entityId >= entityComponentSignatures.size()) {
-        entityComponentSignatures.resize(entityId + 1); // TODO this is wasting memory potentially.
-    }
 
     Logger::Log("Entity created with id = " + std::to_string(entityId));
 
     return entity;
+}
+
+void Registry::KillEntity(Entity entity) {
+    entitesToBeKilled.insert(entity);
+}
+
+void Registry::RemoveEntityFromSystems(Entity entity) {
+    for (auto system: systems) {
+        system.second->RemoveEntityFromSystem(entity);
+    }
 }
 
 void Registry::AddEntityToSystems(Entity entity){
@@ -80,4 +99,12 @@ void Registry::Update() {
         AddEntityToSystems(entity);
     }
     entitiesToBeAdded.clear();
+    for (auto entity: entitesToBeKilled) {
+        RemoveEntityFromSystems(entity);
+        
+        entityComponentSignatures[entity.GetId()].reset();
+
+        freeIds.push_back(entity.GetId());
+    }
+    entitesToBeKilled.clear();
 }

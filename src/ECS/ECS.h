@@ -2,6 +2,7 @@
 #define ECS_H
 
 #include <bitset>
+#include <deque>
 #include <memory>
 #include <string>
 #include <utility>
@@ -39,6 +40,7 @@ class Entity {
 	Entity(int id): id(id) {};
         Entity(const Entity& entity) = default;
 	int GetId() const;
+	void Kill();
 
 	Entity& operator =(const Entity& other) = default;
 	bool operator ==(const Entity& other) const {return id == other.id;}
@@ -140,6 +142,8 @@ class Registry {
     // we will only add and remove entites at the end of the game loop for 1 frame. 
 	std::set<Entity> entitiesToBeAdded;
 	std::set<Entity> entitesToBeKilled;
+
+	std::deque<int>freeIds;
     public:
 	Registry() = default;
 
@@ -157,6 +161,7 @@ class Registry {
         template<typename TSystem> TSystem& GetSystem() const;
 
         void AddEntityToSystems(Entity entity);
+	void RemoveEntityFromSystems(Entity entity);
 	void Update();	
 };
 
