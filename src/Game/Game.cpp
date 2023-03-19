@@ -1,20 +1,22 @@
 #include "Game.h" // no need for angle brackets since the header that we want is in this same folder
 #include <SDL2/SDL_image.h>
-#include "../Components/SpriteComponent.h"
+#include <memory>
 #include <SDL2/SDL.h>
 #include <fstream>
+#include <iostream>
 #include <glm/glm.hpp>
+#include "../EventBus/EventBus.h"
 #include "../Systems/MovementSystem.h"
 #include "../Systems/CollisionSystem.h"
 #include "../Systems/RenderColliderSystem.h"
 #include "../Systems//RenderSystem.h"
+#include "../Systems/DamageSystem.h"
 #include "../Systems/AnimationSystem.h"
 #include "../Components/TransformComponent.h"
+#include "../Components/SpriteComponent.h"
 #include "../Components/BoxColliderComponent.h"
 #include "../Components/RigidBodyComponent.h" // maybe have one header file with all components this could get bothersome.
 #include "../Components/AnimationComponent.h"
-#include <iostream>
-#include <memory>
 #include "../ECS/ECS.h"
 #include "../AssetStore/AssetStore.h"
 #include "../Logger/Logger.h"
@@ -24,6 +26,7 @@ Game::Game() {
     isDebug = false;
     registry = std::make_unique<Registry>();
     assetStore = std::make_unique<AssetStore>();
+    eventBus = std::make_unique<EventBus>();
     Logger::Log("Game constructor called");
 }
 
@@ -89,6 +92,7 @@ void Game::Setup() {
     registry->AddSystem<RenderColliderSystem>();
     registry->AddSystem<AnimationSystem>();
     registry->AddSystem<CollisionSystem>();
+    registry->AddSystem<DamageSystem>();
     
     // Add assets to the asset store
     assetStore->AddTexture(renderer, "tank-image", "./assets/images/tank-panther-right.png");
@@ -162,12 +166,18 @@ void Game::Update(){
     double deltaTime = (SDL_GetTicks() - millisecsPreviousFrame) / 1000.0;
     millisecsPreviousFrame = SDL_GetTicks(); // store "previous" frame
  
+    // Reset all event handlers for the current frame
+    eventBus->Reset();
+
+    // Perform the subscription of the events for all systems
+    registry->GetSystem<DamageSystem>().SubscribeToEvents(eventBus);
+
     // Update the registry to process the enities that are wating to be created/deleted. 
     registry->Update();
     
     registry->GetSystem<MovementSystem>().Update(deltaTime);
     registry->GetSystem<AnimationSystem>().Update();
-    registry->GetSystem<CollisionSystem>().Update();
+    registry->GetSystem<CollisionSystem>().Update(eventBus);
 }
 
 void Game::Render(){

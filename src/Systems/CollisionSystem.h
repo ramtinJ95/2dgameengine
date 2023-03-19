@@ -2,9 +2,12 @@
 #define COLLISIONSYSTEM_H
 
 #include "../ECS/ECS.h"
+#include "../EventBus/EventBus.h"
+#include "../Events/CollisionEvent.h"
 #include "../Components/BoxColliderComponent.h"
 #include "../Components/TransformComponent.h"
 #include "../Logger/Logger.h"
+#include <memory>
 #include <string>
 
 class CollisionSystem: public System {
@@ -14,7 +17,7 @@ public:
 	RequireComponent<BoxColliderComponent>();
     }
 
-    void Update() {
+    void Update(std::unique_ptr<EventBus>& eventBus) {
 	auto entities = GetSystemEntities();
 
 	for (auto i = entities.begin(); i != entities.end(); i++) {
@@ -26,9 +29,8 @@ public:
 		}
 		bool collisionHappned = CheckAABBCollision(a, b);
 		if(collisionHappned) {
-		    a.Kill();
-		    b.Kill();
 		    Logger::Log("Entity " + std::to_string(a.GetId()) + " is colliding with entity " + std::to_string(b.GetId()));
+		    eventBus->EmitEvent<CollisionEvent>(a, b);
 		}
 	    }
 	}
