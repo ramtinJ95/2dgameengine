@@ -27,15 +27,15 @@ class EventCallback: public IEventCallback{
         typedef void (TOwner::*CallbackFunction)(TEvent&);
 
         TOwner* ownerInstance;
-        CallbackFunction callbackFunciton;
+        CallbackFunction callbackFunction;
 
 	virtual void Call(Event& e) override {
-	    std::invoke(callbackFunciton, ownerInstance, static_cast<TEvent&>(e));
+	    std::invoke(callbackFunction, ownerInstance, static_cast<TEvent&>(e));
 	}
     public:
 	EventCallback(TOwner* ownerInstance, CallbackFunction callbackFunction){
 	    this->ownerInstance = ownerInstance;
-	    this->callbackFunciton = callbackFunciton;
+	    this->callbackFunction =callbackFunction;
 	}
 	virtual ~EventCallback() override = default;
 };
@@ -47,7 +47,7 @@ class EventBus {
 	std::map<std::type_index, std::unique_ptr<HandlerList>> subscribers; 
     public:
 	EventBus() {
-	    Logger::Log("EventBus constructor called!")		;
+	    Logger::Log("EventBus constructor called!");
 	}
 	~EventBus() {
 	    Logger::Log("EventBus destructor called!");
@@ -67,7 +67,6 @@ class EventBus {
 	}
         template <typename TEvent, typename ...TArgs>
 	void EmitEvent(TArgs&& ...args) {
-	    Logger::Log("we in the event emit function");
 	    auto handlers = subscribers[typeid(TEvent)].get();
 	    if (handlers) {
 		for (auto it = handlers->begin(); it!= handlers->end(); it++) {

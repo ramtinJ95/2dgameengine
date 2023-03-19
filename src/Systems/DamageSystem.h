@@ -20,8 +20,7 @@ public:
     }
 
     void onCollision(CollisionEvent& event) {
-	Logger::Log("did we get in here");
-	Logger::Log("Damage system received an even collison between entites " + std::to_string(event.a.GetId()) + " and " + std::to_string(event.b.GetId())); 
+	Logger::Log("Damage system received an event collison between entites " + std::to_string(event.a.GetId()) + " and " + std::to_string(event.b.GetId())); 
 	event.a.Kill();
 	event.b.Kill();
 
