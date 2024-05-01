@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(COMP4300 LANGUAGES CXX)
+project(game LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,4 +15,5 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 
 add_subdirectory(deps)
+add_subdirectory(src)
 
