@@ -3,20 +3,59 @@
 #include <fstream>
 
 #include <SFML/Graphics.hpp>
+#include <string>
+#include <vector>
+#include "SFML/Graphics/CircleShape.hpp"
+#include "SFML/Graphics/RectangleShape.hpp"
+#include "SFML/Window/Keyboard.hpp"
 #include "imgui.h"
 #include "imgui-SFML.h"
 
+class Rectangle {
+    std::string m_name = "name";
+    float m_posX, m_posY, m_speedX, m_speedY, m_width, m_height = 0;
+    int m_R, m_G, m_B = 0;
+
+public:
+    Rectangle() {}
+    Rectangle(const std::string& name, float posX, float posY, float speedX, float speedY,
+            float width, float height, int R, int G, int B)
+        : m_name(name), m_posX(posX), m_posY(posY), m_speedX(speedX), m_speedY(speedY), m_width(width),
+        m_height(height), m_R(R), m_B(B), m_G(G)
+        {}
+};
+
+class Circle {
+    std::string m_name = "name";
+    float m_posX, m_posY, m_speedX, m_speedY, m_radius = 0;
+    int m_R, m_G, m_B = 0;
+public:
+    Circle() {}
+
+    Circle(const std::string& name, float posX, float posY, float speedX, float speedY,
+            float radius, int R, int G, int B)
+        : m_name(name), m_posX(posX), m_posY(posY), m_speedX(speedX), m_speedY(speedY),
+        m_radius(radius), m_R(R), m_G(G), m_B(B)
+        {}
+};
+    
+
 int main(int argc, char* argv[])
 {
+    std::vector<sf::RectangleShape> rectangles;
+    std::vector<sf::CircleShape> circles;
+    int wWidth = 0;
+    int wHeight = 0;
+
+
+
     // create a new window of size w*h pixels
     // top-left of the window is (0,0) and bottom-right is (w,h)
     // you will have to read these from the config file
-    const int wWidth = 1280;
-    const int wHeight = 720;
     sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "SFML Works!");
     window.setFramerateLimit(60); // limit frame rate to 60 fps
 
-    // initialize IMGUI and create a clock used for its internal timing
+    // initialize IMGUI and create a cloc-n__n-k used for its internal timing
     ImGui::SFML::Init(window);
     sf::Clock deltaClock;
 
@@ -94,6 +133,10 @@ int main(int argc, char* argv[])
                 {
                     // reverse the x direction of the circle on the screen
                     circleSpeedX *= -1.0f;
+                }
+                if (event.key.code == sf::Keyboard::S)
+                {
+                    window.close();
                 }
             }
         }
