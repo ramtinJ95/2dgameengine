@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "SFML/Graphics/CircleShape.hpp"
+#include "SFML/Graphics/RectangleShape.hpp"
 #include "SFML/Window/Keyboard.hpp"
 #include "imgui-SFML.h"
 #include "imgui.h"
@@ -16,6 +17,8 @@ public:
   std::string m_name = "name";
   float m_posX, m_posY, m_speedX, m_speedY, m_width, m_height = 0;
   int m_R, m_G, m_B = 0;
+  bool visable = true;
+  sf::RectangleShape rectShape;
 
   Rectangle() {}
   Rectangle(const std::string &name, float posX, float posY, float speedX,
@@ -23,10 +26,25 @@ public:
       : m_name(name), m_posX(posX), m_posY(posY), m_speedX(speedX),
         m_speedY(speedY), m_width(width), m_height(height), m_R(R), m_B(B),
         m_G(G) {}
+
   void print(){
       std::cout << m_name << " " << m_posY << " " << m_posX << " " 
           << m_R << " " << m_G << " " << m_B << " " << m_width
           << " " << m_height << " end of rectangle object. \n";
+  }
+
+  bool checkBoundery(){
+      return true;
+  }
+
+  void update() {
+    rectShape.setPosition(rectShape.getPosition().x + m_speedX, rectShape.getPosition().y + m_speedY );
+    m_posX = rectShape.getPosition().x;
+    m_posY = rectShape.getPosition().y;
+  }
+
+  void setVisable() {
+      visable = !visable;
   }
 
 };
@@ -81,6 +99,10 @@ int main(int argc, char *argv[]) {
         iss >> rectangle.m_name >> rectangle.m_posX >> rectangle.m_posY >>
             rectangle.m_speedX >> rectangle.m_speedY >> rectangle.m_R >>
             rectangle.m_G >> rectangle.m_B >> rectangle.m_width >> rectangle.m_height;
+
+        rectangle.rectShape.setPosition(rectangle.m_posX, rectangle.m_posY);
+        rectangle.rectShape.setSize(sf::Vector2f{rectangle.m_width, rectangle.m_height});
+        rectangle.rectShape.setFillColor(sf::Color(rectangle.m_R, rectangle.m_G, rectangle.m_B));
         rectangles.push_back(rectangle);
 
     } else if (type == "Circle") {
@@ -130,6 +152,11 @@ int main(int argc, char *argv[]) {
   sf::CircleShape circle(
       circleRadius, circleSegments); // create a circle shape with radius 50
   circle.setPosition(10.0f, 10.0f);  // set the top-left position of the circle
+
+  sf::RectangleShape testrect;
+  testrect.setPosition(20, 10);
+  testrect.setSize(sf::Vector2f(100,100));
+  testrect.setFillColor(sf::Color(255, 0, 0));
 
   // let's load a font so we can display some text
 
@@ -218,12 +245,17 @@ int main(int argc, char *argv[]) {
     // basic animation - move each shape if it's still in frame
     circle.setPosition(circle.getPosition().x + circleSpeedX,
                        circle.getPosition().y + circleSpeedY);
-
     // basic rendering function calls
     window.clear(); // clear the window of anything previously drawn
     if (drawCircle) // draw the circle if the boolean is true
     {
-      window.draw(circle);
+        window.draw(circle);
+        for(auto& rect : rectangles){
+            rect.update();
+            rect.print();
+            window.draw(rect.rectShape);
+
+        }
     }
     if (drawText) // draw the text if the boolean is true
     {
