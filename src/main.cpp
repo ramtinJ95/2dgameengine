@@ -27,26 +27,30 @@ public:
         m_speedY(speedY), m_width(width), m_height(height), m_R(R), m_B(B),
         m_G(G) {}
 
-  void print(){
-      std::cout << m_name << " " << m_posY << " " << m_posX << " " 
-          << m_R << " " << m_G << " " << m_B << " " << m_width
-          << " " << m_height << " end of rectangle object. \n";
+  void print() {
+    std::cout << m_name << " " << m_posY << " " << m_posX << " " << m_R << " "
+              << m_G << " " << m_B << " " << m_width << " " << m_height
+              << " end of rectangle object. \n";
   }
 
-  bool checkBoundery(){
-      return true;
+  void checkBoundery(int xBoundry, int yBoundry) { 
+    if(rectShape.getPosition().x < 0 || rectShape.getPosition().x + rectShape.getSize().x > xBoundry){
+      m_speedX *= -1;
+    }
+    if(rectShape.getPosition().y < 0 || rectShape.getPosition().y + rectShape.getSize().y > yBoundry){
+      m_speedY *= -1;
+    }
   }
 
-  void update() {
-    rectShape.setPosition(rectShape.getPosition().x + m_speedX, rectShape.getPosition().y + m_speedY );
+  void update(int xBoundry, int yBoundry) {
+    checkBoundery(xBoundry, yBoundry);
+    rectShape.setPosition(rectShape.getPosition().x + m_speedX,
+                          rectShape.getPosition().y + m_speedY);
     m_posX = rectShape.getPosition().x;
     m_posY = rectShape.getPosition().y;
   }
 
-  void setVisable() {
-      visable = !visable;
-  }
-
+  void toggleVisable() { visable = !visable; }
 };
 
 class Circle {
@@ -61,10 +65,10 @@ public:
       : m_name(name), m_posX(posX), m_posY(posY), m_speedX(speedX),
         m_speedY(speedY), m_radius(radius), m_R(R), m_G(G), m_B(B) {}
 
-  void print(){
-      std::cout << m_name << " " << m_posY << " " << m_posX << " " 
-          << m_R << " " << m_G << " " << m_B << " " << m_radius
-          << " end of circle object. \n";
+  void print() {
+    std::cout << m_name << " " << m_posY << " " << m_posX << " " << m_R << " "
+              << m_G << " " << m_B << " " << m_radius
+              << " end of circle object. \n";
   }
 };
 
@@ -92,36 +96,31 @@ int main(int argc, char *argv[]) {
       iss >> wWidth >> wHeight;
 
     } else if (type == "Font") {
-        iss >> fontPath >> fontSize >> fontR >> fontG >> fontB; 
+      iss >> fontPath >> fontSize >> fontR >> fontG >> fontB;
 
     } else if (type == "Rectangle") {
-        Rectangle rectangle;
-        iss >> rectangle.m_name >> rectangle.m_posX >> rectangle.m_posY >>
-            rectangle.m_speedX >> rectangle.m_speedY >> rectangle.m_R >>
-            rectangle.m_G >> rectangle.m_B >> rectangle.m_width >> rectangle.m_height;
+      Rectangle rectangle;
+      iss >> rectangle.m_name >> rectangle.m_posX >> rectangle.m_posY >>
+          rectangle.m_speedX >> rectangle.m_speedY >> rectangle.m_R >>
+          rectangle.m_G >> rectangle.m_B >> rectangle.m_width >>
+          rectangle.m_height;
 
-        rectangle.rectShape.setPosition(rectangle.m_posX, rectangle.m_posY);
-        rectangle.rectShape.setSize(sf::Vector2f{rectangle.m_width, rectangle.m_height});
-        rectangle.rectShape.setFillColor(sf::Color(rectangle.m_R, rectangle.m_G, rectangle.m_B));
-        rectangles.push_back(rectangle);
+      rectangle.rectShape.setPosition(rectangle.m_posX, rectangle.m_posY);
+      rectangle.rectShape.setSize(
+          sf::Vector2f{rectangle.m_width, rectangle.m_height});
+      rectangle.rectShape.setFillColor(
+          sf::Color(rectangle.m_R, rectangle.m_G, rectangle.m_B));
+      rectangles.push_back(rectangle);
 
     } else if (type == "Circle") {
-        Circle circle;
-        iss >> circle.m_name >> circle.m_posX >> circle.m_posY >>
-            circle.m_speedX >> circle.m_speedY >> circle.m_R >>
-            circle.m_G >> circle.m_B >> circle.m_radius;
-        circles.push_back(circle);
+      Circle circle;
+      iss >> circle.m_name >> circle.m_posX >> circle.m_posY >>
+          circle.m_speedX >> circle.m_speedY >> circle.m_R >> circle.m_G >>
+          circle.m_B >> circle.m_radius;
+      circles.push_back(circle);
     }
-
   }
   fin.close();
-
-  for(auto shape : rectangles){
-      shape.print();
-  }
-  for(auto shape : circles){
-      shape.print();
-  }
 
   // create a new window of size w*h pixels
   // top-left of the window is (0,0) and bottom-right is (w,h)
@@ -153,13 +152,6 @@ int main(int argc, char *argv[]) {
       circleRadius, circleSegments); // create a circle shape with radius 50
   circle.setPosition(10.0f, 10.0f);  // set the top-left position of the circle
 
-  sf::RectangleShape testrect;
-  testrect.setPosition(20, 10);
-  testrect.setSize(sf::Vector2f(100,100));
-  testrect.setFillColor(sf::Color(255, 0, 0));
-
-  // let's load a font so we can display some text
-
   // attempt to load the font from a file
   if (!myFont.loadFromFile("fonts/Arial.ttf")) {
     // if we can't load the font, print an error to the error console and exit
@@ -173,7 +165,6 @@ int main(int argc, char *argv[]) {
   // position the top-left corner of the text so that the text aligns on the
   // bottom text character size is in pixels, so move the text up from the
   // bottom by its height
-  text.setPosition(0, wHeight - (float)text.getCharacterSize());
 
   // set up a character array to set the text
   char displayString[255] = "Sample Text";
@@ -249,13 +240,22 @@ int main(int argc, char *argv[]) {
     window.clear(); // clear the window of anything previously drawn
     if (drawCircle) // draw the circle if the boolean is true
     {
-        window.draw(circle);
-        for(auto& rect : rectangles){
-            rect.update();
-            rect.print();
-            window.draw(rect.rectShape);
-
+      window.draw(circle);
+      for (auto &rect : rectangles) {
+        sf::Text rectName(rect.m_name, myFont, 20);
+        rectName.setFillColor(sf::Color::White);
+        rect.update(wWidth, wHeight);
+        auto rectBB = rect.rectShape.getGlobalBounds(); 
+        if(rectBB.height < 20){
+          rectName.setCharacterSize(rectBB.height * 0.9);
         }
+        auto rectNameBB= rectName.getGlobalBounds();
+        rectName.setPosition( rectBB.left + rectBB.width / 2 - rectNameBB.width / 2,
+            rectBB.top + rectBB.height / 2 - rectNameBB.height / 2 - 6);
+        window.draw(rect.rectShape);
+        window.draw(rectName);
+      }
+
     }
     if (drawText) // draw the text if the boolean is true
     {
