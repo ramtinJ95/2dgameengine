@@ -17,7 +17,7 @@ public:
   std::string m_name = "name";
   float m_posX, m_posY, m_speedX, m_speedY, m_width, m_height = 0;
   int m_R, m_G, m_B = 0;
-  bool visable = true;
+  bool isVisable = true;
   sf::RectangleShape rectShape;
 
   Rectangle() {}
@@ -33,11 +33,13 @@ public:
               << " end of rectangle object. \n";
   }
 
-  void checkBoundery(int xBoundry, int yBoundry) { 
-    if(rectShape.getPosition().x < 0 || rectShape.getPosition().x + rectShape.getSize().x > xBoundry){
+  void checkBoundery(int xBoundry, int yBoundry) {
+    if (rectShape.getPosition().x < 0 ||
+        rectShape.getPosition().x + rectShape.getSize().x > xBoundry) {
       m_speedX *= -1;
     }
-    if(rectShape.getPosition().y < 0 || rectShape.getPosition().y + rectShape.getSize().y > yBoundry){
+    if (rectShape.getPosition().y < 0 ||
+        rectShape.getPosition().y + rectShape.getSize().y > yBoundry) {
       m_speedY *= -1;
     }
   }
@@ -50,7 +52,7 @@ public:
     m_posY = rectShape.getPosition().y;
   }
 
-  void toggleVisable() { visable = !visable; }
+  void toggleVisable() { isVisable = !isVisable; }
 };
 
 class Circle {
@@ -219,8 +221,9 @@ int main(int argc, char *argv[]) {
     ImGui::SliderInt("Sides", &circleSegments, 3, 64);
     ImGui::ColorEdit3("Color Circle", c);
     ImGui::InputText("Text", displayString, 255);
-    if (ImGui::Button("Set Text")) {
-      text.setString(displayString);
+    if (ImGui::Button("Hide rect")) {
+      auto& rect = rectangles[0]; 
+      rect.toggleVisable();
     }
     ImGui::SameLine();
     if (ImGui::Button("Reset Circle")) {
@@ -242,20 +245,22 @@ int main(int argc, char *argv[]) {
     {
       window.draw(circle);
       for (auto &rect : rectangles) {
-        sf::Text rectName(rect.m_name, myFont, 20);
-        rectName.setFillColor(sf::Color::White);
-        rect.update(wWidth, wHeight);
-        auto rectBB = rect.rectShape.getGlobalBounds(); 
-        if(rectBB.height < 20){
-          rectName.setCharacterSize(rectBB.height * 0.9);
+        if (rect.isVisable) {
+          sf::Text rectName(rect.m_name, myFont, 20);
+          rectName.setFillColor(sf::Color::White);
+          rect.update(wWidth, wHeight);
+          auto rectBB = rect.rectShape.getGlobalBounds();
+          if (rectBB.height < 20) {
+            rectName.setCharacterSize(rectBB.height * 0.9);
+          }
+          auto rectNameBB = rectName.getGlobalBounds();
+          rectName.setPosition(
+              rectBB.left + rectBB.width / 2 - rectNameBB.width / 2,
+              rectBB.top + rectBB.height / 2 - rectNameBB.height / 2 - 6);
+          window.draw(rect.rectShape);
+          window.draw(rectName);
         }
-        auto rectNameBB= rectName.getGlobalBounds();
-        rectName.setPosition( rectBB.left + rectBB.width / 2 - rectNameBB.width / 2,
-            rectBB.top + rectBB.height / 2 - rectNameBB.height / 2 - 6);
-        window.draw(rect.rectShape);
-        window.draw(rectName);
       }
-
     }
     if (drawText) // draw the text if the boolean is true
     {
