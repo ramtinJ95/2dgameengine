@@ -26,6 +26,7 @@ void Game::run() {
   // todo: add pause functionality in here
   //       some systems should function while paused (rendering)
   //       some systems shouldn't (movement / input)
+  m_spawnInterval = 120;
   while (m_running) {
     // update the entity manager
     m_entities.update();
@@ -77,6 +78,7 @@ void Game::spawnPlayer() {
   // This goes slightly against the EntityManager paradigm, but we use the
   // player so much it's worth it
   m_player = entity;
+  spawnEnemy();
 }
 
 // spawn an enemy at a random position
@@ -86,6 +88,11 @@ void Game::spawnEnemy() {
   //       the enemy must be spawned completely within the bounds of the window
 
   // record when the most recent enemy was spawned
+  auto enemy_entity = m_entities.addEntity("enemy");
+  enemy_entity->cTransform =
+      std::make_shared<CTransform>(Vec2(400.f, 200.f), Vec2(1.f, 1.f), 0.f);
+  enemy_entity->cShape = std::make_shared<CShape>(
+      32.f, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
   m_lastEnemySpawnTime = m_currentFrame;
 }
 
@@ -106,6 +113,15 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2 &target) {
   // todo: implement the spawning of a bullet which travels toward target
   //       - bullet speed is given as a scalar speed
   //       - you must set the velocity by using formula in notes
+  auto bullet = m_entities.addEntity("bullet");
+  float origin_x = entity->cTransform->pos.x;
+  float origin_y = entity->cTransform->pos.y;
+  Vec2 distance = entity->cTransform->pos.dist(target);
+  Vec2 normal_D = distance.normalized(distance);
+  Vec2 velocity = Vec2(normal_D.x * 10, normal_D.y * 10);
+  bullet->cTransform =
+      std::make_shared<CTransform>(Vec2(origin_x, origin_y), velocity, 0.f);
+  bullet->cShape = std::make_shared<CShape>(8.f, 32, sf::Color(10, 10, 10), sf::Color::Green, 4.f);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity) {
@@ -118,8 +134,14 @@ void Game::sMovement() {
   //       player is moving
 
   // Sample movement speed update
-  m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
-  m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+  // m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
+  // m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+
+  auto bullet = m_entities.getEntities("bullet");
+  for(auto b : bullet){
+      b->cTransform->pos.x += b->cTransform->velocity.x; 
+      b->cTransform->pos.y += b->cTransform->velocity.y; 
+  }
 }
 
 void Game::sLifespan() {
@@ -129,6 +151,13 @@ void Game::sLifespan() {
   //     if entity has > 0 remaining lifespan, subtract 1
   //     if it has lifespan and is_alive, scale its alpha channel properly
   //     if it has lifespan and its time is up, destroy the entity
+  for (auto e: m_entities.getEntities()){
+      if(e->cLifespan){
+          if(e->cLifespan->remaining > 0) {
+              e->cLifespan->remaining -= 1;
+          }
+      }
+  }
 }
 
 void Game::sCollision() {
@@ -138,6 +167,9 @@ void Game::sCollision() {
 
 void Game::sEnemySpawner() {
   // todo: code which implements enemy spawning should go here
+  // if (60 < m_currentFrame - m_lastEnemySpawnTime) {
+  // spawnEnemy();
+  // }
 }
 
 void Game::sGUI() {
@@ -152,18 +184,19 @@ void Game::sRender() {
   m_window.clear();
 
   // set the position of the shape based on the entity's transform->pos
-  m_player->cShape->circle.setPosition(m_player->cTransform->pos.x,
-                                       m_player->cTransform->pos.y);
+  for (auto e : m_entities.getEntities()) {
+    e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
 
-  // set the rotation of the shape based on the entity's transform->angle
-  m_player->cTransform->angle += 1.0f;
-  m_player->cShape->circle.setRotation(m_player->cTransform->angle);
+    // set the rotation of the shape based on the entity's transform->angle
+    e->cTransform->angle += 1.0f;
+    e->cShape->circle.setRotation(e->cTransform->angle);
 
-  // draw the entity's sf::CircleShape
-  m_window.draw(m_player->cShape->circle);
+    // draw the entity's sf::CircleShape
+    m_window.draw(e->cShape->circle);
 
-  // draw the ui last
-  ImGui::SFML::Render(m_window);
+    // draw the ui last
+    ImGui::SFML::Render(m_window);
+  }
 
   m_window.display();
 }
@@ -189,6 +222,10 @@ void Game::sUserInput() {
         std::cout << "W key pressed\n";
         // todo: set player's input component "up" to true
         break;
+      case sf::Keyboard::Escape:
+        m_running = false;
+        m_window.close();
+        break;
       default:
         break;
       }
@@ -212,9 +249,10 @@ void Game::sUserInput() {
       }
 
       if (event.mouseButton.button == sf::Mouse::Left) {
-        std::cout << "Left Mouse Button Clicked at (" << event.mouseButton.x
-                  << "," << event.mouseButton.y << ")\n";
-        // call spawnBullet here
+        int x = event.mouseButton.x;
+        int y = event.mouseButton.y;
+        std::cout << "Left Mouse Button Clicked at (" << x << "," << y << ")\n";
+        spawnBullet(m_player, Vec2(x, y));
       }
 
       if (event.mouseButton.button == sf::Mouse::Right) {

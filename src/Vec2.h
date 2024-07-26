@@ -19,5 +19,6 @@ public:
   void operator/=(const float val);
   void operator*=(const float val);
 
-  float dist(const Vec2 &rhs) const;
+  Vec2 dist(const Vec2 &rhs) const;
+  Vec2 normalized(const Vec2 &vec) const;
 };
