@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <string>
 
 Game::Game(const std::string &config) { init(config); }
@@ -63,7 +64,7 @@ void Game::spawnPlayer() {
   // Give this entity a Transform so it spawns at (200, 200) with velocity (1,
   // 1) and angle 0
   entity->cTransform =
-      std::make_shared<CTransform>(Vec2(200.f, 200.f), Vec2(1.f, 1.f), 0.f);
+      std::make_shared<CTransform>(Vec2(200.f, 200.f), Vec2(0, 0), 0.f);
 
   // The entity's shape will have radius 32, 8 sides, dark grey fill,
   // and red outline of thickness 4
@@ -90,7 +91,7 @@ void Game::spawnEnemy() {
   // record when the most recent enemy was spawned
   auto enemy_entity = m_entities.addEntity("enemy");
   enemy_entity->cTransform =
-      std::make_shared<CTransform>(Vec2(400.f, 200.f), Vec2(1.f, 1.f), 0.f);
+      std::make_shared<CTransform>(Vec2(400.f, 200.f), Vec2(0, 0), 0.f);
   enemy_entity->cShape = std::make_shared<CShape>(
       32.f, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
   m_lastEnemySpawnTime = m_currentFrame;
@@ -136,11 +137,48 @@ void Game::sMovement() {
   // Sample movement speed update
   // m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
   // m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+  m_player->cTransform->velocity = Vec2(0, 0);
+  auto player_input = m_player->cInput;
+  auto & player_velocity = m_player->cTransform->velocity;
+  std::cout << "up value: " << player_input->up;
+  std::cout << "down value: " << player_input->down;
+  std::cout << "right value: " << player_input->right;
 
-  auto bullet = m_entities.getEntities("bullet");
-  for(auto b : bullet){
-      b->cTransform->pos.x += b->cTransform->velocity.x; 
-      b->cTransform->pos.y += b->cTransform->velocity.y; 
+  if(player_input->up && !player_input->right && !player_input->left){
+      player_velocity.y -= 1.f;
+  }
+  else if(player_input->down && !player_input->left && !player_input->right){
+      player_velocity.y += 1.f;
+  }
+  else if(player_input->left && !player_input->up && !player_input->down){
+      player_velocity.x -= 1.f;
+  }
+  else if(player_input->right && !player_input->up && !player_input->down){
+      player_velocity.x += 1.f;
+  }
+  else if (player_input->right && player_input->up) {
+      float dx = 1.f * std::cosf(std::numbers::pi / 4);
+      float dy = -1.f * std::cosf(std::numbers::pi / 4);
+      player_velocity = Vec2(dx,dy);
+  }
+  else if (player_input->right && player_input->down){
+      float dx = 1.f * std::cosf(std::numbers::pi / 4);
+      float dy = 1.f * std::cosf(std::numbers::pi / 4);
+      player_velocity = Vec2(dx,dy);
+  }
+  else if (player_input->left && player_input->up){
+      float dx = -1.f * std::cosf(std::numbers::pi / 4);
+      float dy = -1.f * std::cosf(std::numbers::pi / 4);
+      player_velocity = Vec2(dx,dy);
+  }
+  else if (player_input->left && player_input->down){
+      float dx = -1.f * std::cosf(std::numbers::pi / 4);
+      float dy = 1.f * std::cosf(std::numbers::pi / 4);
+      player_velocity = Vec2(dx,dy);
+  }
+  for(auto e : m_entities.getEntities()){
+      e->cTransform->pos.x += e->cTransform->velocity.x; 
+      e->cTransform->pos.y += e->cTransform->velocity.y; 
   }
 }
 
@@ -188,8 +226,8 @@ void Game::sRender() {
     e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
 
     // set the rotation of the shape based on the entity's transform->angle
-    e->cTransform->angle += 1.0f;
-    e->cShape->circle.setRotation(e->cTransform->angle);
+    // e->cTransform->angle += 1.0f;
+    // e->cShape->circle.setRotation(e->cTransform->angle);
 
     // draw the entity's sf::CircleShape
     m_window.draw(e->cShape->circle);
@@ -219,8 +257,16 @@ void Game::sUserInput() {
     if (event.type == sf::Event::KeyPressed) {
       switch (event.key.code) {
       case sf::Keyboard::W:
-        std::cout << "W key pressed\n";
-        // todo: set player's input component "up" to true
+        m_player->cInput->up = true;
+        break;
+      case sf::Keyboard::S:
+        m_player->cInput->down = true;
+        break;
+      case sf::Keyboard::D:
+        m_player->cInput->right = true;
+        break;
+      case sf::Keyboard::A:
+        m_player->cInput->left = true;
         break;
       case sf::Keyboard::Escape:
         m_running = false;
@@ -234,9 +280,18 @@ void Game::sUserInput() {
     if (event.type == sf::Event::KeyReleased) {
       switch (event.key.code) {
       case sf::Keyboard::W:
-        std::cout << "W key released\n";
-        // todo: set player's input component "up" to false
+        m_player->cInput->up = false;
         break;
+      case sf::Keyboard::S:
+        m_player->cInput->down = false;
+        break;
+      case sf::Keyboard::D:
+        m_player->cInput->right = false;
+        break;
+      case sf::Keyboard::A:
+        m_player->cInput->left = false;
+        break;
+ 
       default:
         break;
       }
