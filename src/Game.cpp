@@ -2,6 +2,7 @@
 #include "SFML/Window/Event.hpp"
 #include "imgui-SFML.h"
 #include "imgui.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -14,10 +15,53 @@ void Game::init(const std::string &path) {
   // todo: read in config file here
   //       use the premade PlayerConfig, EnemyConfig, BulletConfig variables
   std::ifstream fin(path);
+  if (!fin) {
+    std::cerr << "Could not find/load config.txt file!\n";
+    std::cerr << path;
+    exit(-1);
+  }
+
+  std::string head;
+  int window_width, window_height;
+  int frameLimit, fullscreen;
+  while (fin >> head) {
+    if (head == "Window") {
+      fin >> window_width >> window_height >> frameLimit >> fullscreen;
+    } else if (head == "Font") {
+      int r, g, b;
+      std::string font_file;
+      int font_size;
+      fin >> font_file >> font_size >> r >> g >> b;
+      m_font.loadFromFile(font_file);
+      m_text.setFillColor(sf::Color(r, g, b));
+      m_text = sf::Text("SCORE: ", m_font, font_size);
+      m_text.setPosition(10, 10);
+    } else if (head == "Player") {
+      fin >> m_playerConfig.SR >> m_playerConfig.CR >> m_playerConfig.S >>
+          m_playerConfig.FR >> m_playerConfig.FG >> m_playerConfig.FB >>
+          m_playerConfig.OR >> m_playerConfig.OG >> m_playerConfig.OB >>
+          m_playerConfig.OT >> m_playerConfig.V;
+    } else if (head == "Enemy") {
+      fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >>
+          m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB >>
+          m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB >>
+          m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+    } else if (head == "Bullet") {
+      fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >>
+          m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB >>
+          m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB >>
+          m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+    } else {
+      std::cerr << "head is: " << head << "\n";
+      std::cerr << "The config file is not formatted correctly or contains "
+                   "weird wrong things!\n";
+      exit(-1);
+    }
+  }
 
   // set up default window parameters
-  m_window.create(sf::VideoMode(1280, 720), "SFML");
-  m_window.setFramerateLimit(60);
+  m_window.create(sf::VideoMode(window_width, window_height), "SFML");
+  m_window.setFramerateLimit(frameLimit);
 
   ImGui::SFML::Init(m_window);
   spawnPlayer();
@@ -73,6 +117,7 @@ void Game::spawnPlayer() {
 
   // Add an input component to the player so that we can use inputs
   entity->cInput = std::make_shared<CInput>();
+  entity->cCollission = std::make_shared<CCollision>(16);
 
   // Since we want this Entity to be our player, set our Game's player variable
   // to be this entity
@@ -92,8 +137,11 @@ void Game::spawnEnemy() {
   auto enemy_entity = m_entities.addEntity("enemy");
   enemy_entity->cTransform =
       std::make_shared<CTransform>(Vec2(400.f, 200.f), Vec2(0, 0), 0.f);
+
   enemy_entity->cShape = std::make_shared<CShape>(
       32.f, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
+
+  enemy_entity->cCollission = std::make_shared<CCollision>(16);
   m_lastEnemySpawnTime = m_currentFrame;
 }
 
@@ -122,7 +170,11 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2 &target) {
   Vec2 velocity = Vec2(normal_D.x * 10, normal_D.y * 10);
   bullet->cTransform =
       std::make_shared<CTransform>(Vec2(origin_x, origin_y), velocity, 0.f);
-  bullet->cShape = std::make_shared<CShape>(8.f, 32, sf::Color(10, 10, 10), sf::Color::Green, 4.f);
+
+  bullet->cShape = std::make_shared<CShape>(8.f, 32, sf::Color(10, 10, 10),
+                                            sf::Color::Green, 4.f);
+
+  bullet->cCollission = std::make_shared<CCollision>(16);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity) {
@@ -139,46 +191,49 @@ void Game::sMovement() {
   // m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
   m_player->cTransform->velocity = Vec2(0, 0);
   auto player_input = m_player->cInput;
-  auto & player_velocity = m_player->cTransform->velocity;
-  std::cout << "up value: " << player_input->up;
-  std::cout << "down value: " << player_input->down;
-  std::cout << "right value: " << player_input->right;
+  auto &player_velocity = m_player->cTransform->velocity;
 
-  if(player_input->up && !player_input->right && !player_input->left){
-      player_velocity.y -= 1.f;
+  if (player_input->up && !player_input->right && !player_input->left) {
+    player_velocity.y -= 1.f;
+  } else if (player_input->down && !player_input->left &&
+             !player_input->right) {
+    player_velocity.y += 1.f;
+  } else if (player_input->left && !player_input->up && !player_input->down) {
+    player_velocity.x -= 1.f;
+  } else if (player_input->right && !player_input->up && !player_input->down) {
+    player_velocity.x += 1.f;
+  } else if (player_input->right && player_input->up) {
+    float dx = 1.f * std::cosf(std::numbers::pi / 4);
+    float dy = -1.f * std::cosf(std::numbers::pi / 4);
+    player_velocity = Vec2(dx, dy);
+  } else if (player_input->right && player_input->down) {
+    float dx = 1.f * std::cosf(std::numbers::pi / 4);
+    float dy = 1.f * std::cosf(std::numbers::pi / 4);
+    player_velocity = Vec2(dx, dy);
+  } else if (player_input->left && player_input->up) {
+    float dx = -1.f * std::cosf(std::numbers::pi / 4);
+    float dy = -1.f * std::cosf(std::numbers::pi / 4);
+    player_velocity = Vec2(dx, dy);
+  } else if (player_input->left && player_input->down) {
+    float dx = -1.f * std::cosf(std::numbers::pi / 4);
+    float dy = 1.f * std::cosf(std::numbers::pi / 4);
+    player_velocity = Vec2(dx, dy);
   }
-  else if(player_input->down && !player_input->left && !player_input->right){
-      player_velocity.y += 1.f;
+
+  // player against wall check
+  for (auto e : m_entities.getEntities()) {
+    e->cTransform->pos.x += e->cTransform->velocity.x;
+    e->cTransform->pos.y += e->cTransform->velocity.y;
   }
-  else if(player_input->left && !player_input->up && !player_input->down){
-      player_velocity.x -= 1.f;
+  if (0 > m_player->cTransform->pos.x - m_player->cShape->circle.getRadius() ||
+      m_window.getSize().x <
+          m_player->cTransform->pos.x + m_player->cShape->circle.getRadius()) {
+    m_player->cTransform->pos.x -= player_velocity.x;
   }
-  else if(player_input->right && !player_input->up && !player_input->down){
-      player_velocity.x += 1.f;
-  }
-  else if (player_input->right && player_input->up) {
-      float dx = 1.f * std::cosf(std::numbers::pi / 4);
-      float dy = -1.f * std::cosf(std::numbers::pi / 4);
-      player_velocity = Vec2(dx,dy);
-  }
-  else if (player_input->right && player_input->down){
-      float dx = 1.f * std::cosf(std::numbers::pi / 4);
-      float dy = 1.f * std::cosf(std::numbers::pi / 4);
-      player_velocity = Vec2(dx,dy);
-  }
-  else if (player_input->left && player_input->up){
-      float dx = -1.f * std::cosf(std::numbers::pi / 4);
-      float dy = -1.f * std::cosf(std::numbers::pi / 4);
-      player_velocity = Vec2(dx,dy);
-  }
-  else if (player_input->left && player_input->down){
-      float dx = -1.f * std::cosf(std::numbers::pi / 4);
-      float dy = 1.f * std::cosf(std::numbers::pi / 4);
-      player_velocity = Vec2(dx,dy);
-  }
-  for(auto e : m_entities.getEntities()){
-      e->cTransform->pos.x += e->cTransform->velocity.x; 
-      e->cTransform->pos.y += e->cTransform->velocity.y; 
+  if (0 > m_player->cTransform->pos.y - m_player->cShape->circle.getRadius() ||
+      m_window.getSize().y <
+          m_player->cTransform->pos.y + m_player->cShape->circle.getRadius()) {
+    m_player->cTransform->pos.y -= player_velocity.y;
   }
 }
 
@@ -189,18 +244,39 @@ void Game::sLifespan() {
   //     if entity has > 0 remaining lifespan, subtract 1
   //     if it has lifespan and is_alive, scale its alpha channel properly
   //     if it has lifespan and its time is up, destroy the entity
-  for (auto e: m_entities.getEntities()){
-      if(e->cLifespan){
-          if(e->cLifespan->remaining > 0) {
-              e->cLifespan->remaining -= 1;
-          }
+  for (auto e : m_entities.getEntities()) {
+    if (e->cLifespan) {
+      if (e->cLifespan->remaining > 0) {
+        e->cLifespan->remaining -= 1;
       }
+    }
   }
 }
 
 void Game::sCollision() {
-  // todo: implement all proper collisions between enemies
-  //       be sure to use the collision radius, NOT the shape radius
+  // enemy-player collision check
+  for (auto e : m_entities.getEntities("enemy")) {
+    Vec2 dv = m_player->cTransform->pos.dist(e->cTransform->pos);
+    float r1 = m_player->cCollission->radius;
+    float r2 = e->cCollission->radius;
+    if ((dv.x * dv.x + dv.y * dv.y) < (r1 * r2 + r1 * r2)) {
+      std::cout << "We have a collison ";
+      // m_player->destroy();
+    }
+  }
+  // bullet enemy collision
+  for (auto bullet : m_entities.getEntities("bullet")) {
+    for (auto enemy : m_entities.getEntities("enemy")) {
+      Vec2 dv = bullet->cTransform->pos.dist(enemy->cTransform->pos);
+      float bullet_radius = bullet->cCollission->radius;
+      float enemy_radius = enemy->cCollission->radius;
+      if ((dv.x * dv.x + dv.y * dv.y) <
+          (bullet_radius * enemy_radius + bullet_radius * enemy_radius)) {
+        bullet->destroy();
+        enemy->destroy();
+      }
+    }
+  }
 }
 
 void Game::sEnemySpawner() {
@@ -236,6 +312,7 @@ void Game::sRender() {
     ImGui::SFML::Render(m_window);
   }
 
+  m_window.draw(m_text);
   m_window.display();
 }
 
@@ -291,7 +368,7 @@ void Game::sUserInput() {
       case sf::Keyboard::A:
         m_player->cInput->left = false;
         break;
- 
+
       default:
         break;
       }
