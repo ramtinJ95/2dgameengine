@@ -56,18 +56,9 @@ void Game::init(const std::string &path)
     }
     else if (head == "Enemy")
     {
-      fin >> m_enemyConfig.SR
-                >> m_enemyConfig.CR
-                >> m_enemyConfig.SMIN
-                >> m_enemyConfig.SMAX
-                >> m_enemyConfig.OR
-                >> m_enemyConfig.OG
-                >> m_enemyConfig.OB
-                >> m_enemyConfig.OT
-                >> m_enemyConfig.VMIN
-                >> m_enemyConfig.VMAX
-                >> m_enemyConfig.L
-                >> m_enemyConfig.SI;
+      fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX >>
+          m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT >>
+          m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SI;
     }
     else if (head == "Bullet")
     {
@@ -157,7 +148,8 @@ void Game::spawnEnemy()
 
   // record when the most recent enemy was spawned
   auto enemy_entity = m_entities.addEntity("enemy");
-  enemy_entity->cTransform = std::make_shared<CTransform>(Vec2(400.f, 200.f), Vec2(0, 0), 0.f);
+  enemy_entity->cTransform = std::make_shared<CTransform>(
+      Vec2(rng(m_enemyConfig.SR, m_window.getSize().x - m_enemyConfig.SR), 200.f), Vec2(0, 0), 0.f);
 
   enemy_entity->cShape =
       std::make_shared<CShape>(m_enemyConfig.SR, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
@@ -461,4 +453,11 @@ void Game::sUserInput()
       }
     }
   }
+}
+
+int Game::rng(int min, int max)
+{
+  std::srand((unsigned)std::time(NULL));
+  int rand_val = min + (rand() % max);
+  return rand_val;
 }
