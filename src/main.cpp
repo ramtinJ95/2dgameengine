@@ -3,7 +3,8 @@
 
 #include "Game.h"
 
-int main() {
+int main()
+{
   Game g("../src/config.txt");
   g.run();
   // Vec2 v1 = Vec2(3,2);

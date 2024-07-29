@@ -54,6 +54,8 @@ class Game {
   void spawnBullet(std::shared_ptr<Entity> entity, const Vec2 &mousePos);
   void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
 
+  int random_number_generator(int min, int max);
+
 public:
   Game(const std::string &config);
   void run();

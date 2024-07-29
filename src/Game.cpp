@@ -181,12 +181,16 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2 &target)
   float origin_y = entity->cTransform->pos.y;
   Vec2 distance = entity->cTransform->pos.dist(target);
   Vec2 normal_D = distance.normalized(distance);
-  Vec2 velocity = Vec2(normal_D.x * 10, normal_D.y * 10);
+  int speed_scalar = m_bulletConfig.S;
+  Vec2 velocity = Vec2(normal_D.x * speed_scalar, normal_D.y * speed_scalar);
   bullet->cTransform = std::make_shared<CTransform>(Vec2(origin_x, origin_y), velocity, 0.f);
 
-  bullet->cShape = std::make_shared<CShape>(8.f, 32, sf::Color(10, 10, 10), sf::Color::Green, 4.f);
+  bullet->cShape = std::make_shared<CShape>(
+      m_bulletConfig.SR, m_bulletConfig.V,
+      sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB),
+      sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB), m_bulletConfig.OT);
 
-  bullet->cCollission = std::make_shared<CCollision>(16);
+  bullet->cCollission = std::make_shared<CCollision>(m_bulletConfig.CR);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)

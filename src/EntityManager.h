@@ -7,7 +7,8 @@
 typedef std::vector<std::shared_ptr<Entity>> EntityVec;
 typedef std::map<std::string, EntityVec> EntityMap;
 
-class EntityManager {
+class EntityManager
+{
   EntityVec m_entities;
   EntityVec m_entitiesToAdd;
   EntityMap m_entityMap;

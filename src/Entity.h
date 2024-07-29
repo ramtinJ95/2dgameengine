@@ -4,7 +4,8 @@
 #include <memory>
 #include <string>
 
-class Entity {
+class Entity
+{
   friend class EntityManager;
 
   bool m_active = true;
@@ -26,4 +27,3 @@ public:
   const size_t id() const;
   void destroy();
 };
-
