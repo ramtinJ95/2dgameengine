@@ -56,9 +56,18 @@ void Game::init(const std::string &path)
     }
     else if (head == "Enemy")
     {
-      fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >> m_bulletConfig.FR >>
-          m_bulletConfig.FG >> m_bulletConfig.FB >> m_bulletConfig.OR >> m_bulletConfig.OG >>
-          m_bulletConfig.OB >> m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+      fin >> m_enemyConfig.SR
+                >> m_enemyConfig.CR
+                >> m_enemyConfig.SMIN
+                >> m_enemyConfig.SMAX
+                >> m_enemyConfig.OR
+                >> m_enemyConfig.OG
+                >> m_enemyConfig.OB
+                >> m_enemyConfig.OT
+                >> m_enemyConfig.VMIN
+                >> m_enemyConfig.VMAX
+                >> m_enemyConfig.L
+                >> m_enemyConfig.SI;
     }
     else if (head == "Bullet")
     {
@@ -151,7 +160,7 @@ void Game::spawnEnemy()
   enemy_entity->cTransform = std::make_shared<CTransform>(Vec2(400.f, 200.f), Vec2(0, 0), 0.f);
 
   enemy_entity->cShape =
-      std::make_shared<CShape>(32.f, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
+      std::make_shared<CShape>(m_enemyConfig.SR, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
 
   enemy_entity->cCollission = std::make_shared<CCollision>(16);
   m_lastEnemySpawnTime = m_currentFrame;
