@@ -149,12 +149,18 @@ void Game::spawnEnemy()
   // record when the most recent enemy was spawned
   auto enemy_entity = m_entities.addEntity("enemy");
   enemy_entity->cTransform = std::make_shared<CTransform>(
-      Vec2(rng(m_enemyConfig.SR, m_window.getSize().x - m_enemyConfig.SR), 200.f), Vec2(0, 0), 0.f);
+      Vec2(rng(m_enemyConfig.SR, m_window.getSize().x - m_enemyConfig.SR),
+           rng(m_enemyConfig.SR, m_window.getSize().y - m_enemyConfig.SR)),
+      Vec2(rng(m_enemyConfig.SMIN, m_enemyConfig.SMAX),
+           rng(m_enemyConfig.SMIN, m_enemyConfig.SMAX)),
+      0.f);
 
-  enemy_entity->cShape =
-      std::make_shared<CShape>(m_enemyConfig.SR, 3, sf::Color(10, 10, 10), sf::Color::Blue, 4.f);
+  enemy_entity->cShape = std::make_shared<CShape>(
+      m_enemyConfig.SR, rng(m_enemyConfig.VMIN, m_enemyConfig.VMAX),
+      sf::Color(rng(0, 255), rng(0, 255), rng(0, 255)),
+      sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB), m_enemyConfig.OT);
 
-  enemy_entity->cCollission = std::make_shared<CCollision>(16);
+  enemy_entity->cCollission = std::make_shared<CCollision>(m_enemyConfig.CR);
   m_lastEnemySpawnTime = m_currentFrame;
 }
 
@@ -256,16 +262,34 @@ void Game::sMovement()
   // player against wall check
   for (auto e : m_entities.getEntities())
   {
+    if (e->tag() == "enemy")
+    {
+      if (0 > e->cTransform->pos.x - e->cCollission->radius ||
+          e->cTransform->pos.x + e->cCollission->radius > m_window.getSize().x)
+      {
+        e->cTransform->velocity.x *= -1;
+      }
+
+      if (0 > e->cTransform->pos.y - e->cCollission->radius ||
+          e->cTransform->pos.y + e->cCollission->radius > m_window.getSize().y)
+      {
+        e->cTransform->velocity.y *= -1;
+      }
+    }
+    else if (e->tag() == "player") {
+    
+    }
     e->cTransform->pos.x += e->cTransform->velocity.x;
     e->cTransform->pos.y += e->cTransform->velocity.y;
   }
-  if (0 > m_player->cTransform->pos.x - m_player->cShape->circle.getRadius() ||
-      m_window.getSize().x < m_player->cTransform->pos.x + m_player->cShape->circle.getRadius())
+  if (0 > m_player->cTransform->pos.x - m_player->cCollission->radius ||
+      m_player->cTransform->pos.x + m_player->cCollission->radius > m_window.getSize().x)
   {
     m_player->cTransform->pos.x -= player_velocity.x;
   }
-  if (0 > m_player->cTransform->pos.y - m_player->cShape->circle.getRadius() ||
-      m_window.getSize().y < m_player->cTransform->pos.y + m_player->cShape->circle.getRadius())
+
+  if (0 > m_player->cTransform->pos.y - m_player->cCollission->radius ||
+      m_player->cTransform->pos.y + m_player->cCollission->radius > m_window.getSize().y)
   {
     m_player->cTransform->pos.y -= player_velocity.y;
   }
@@ -350,8 +374,8 @@ void Game::sRender()
     e->cShape->circle.setPosition(e->cTransform->pos.x, e->cTransform->pos.y);
 
     // set the rotation of the shape based on the entity's transform->angle
-    // e->cTransform->angle += 1.0f;
-    // e->cShape->circle.setRotation(e->cTransform->angle);
+     e->cTransform->angle += 1.0f;
+     e->cShape->circle.setRotation(e->cTransform->angle);
 
     // draw the entity's sf::CircleShape
     m_window.draw(e->cShape->circle);
