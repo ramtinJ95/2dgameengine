@@ -1,10 +1,11 @@
 #include "Game.h"
 
-#include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <numbers>
+#include <ostream>
 #include <string>
 
 #include "SFML/Window/Event.hpp"
@@ -136,7 +137,6 @@ void Game::spawnPlayer()
   entity->cCollission = std::make_shared<CCollision>(m_playerConfig.CR);
 
   m_player = entity;
-  spawnEnemy();
 }
 
 // spawn an enemy at a random position
@@ -157,7 +157,7 @@ void Game::spawnEnemy()
 
   enemy_entity->cShape = std::make_shared<CShape>(
       m_enemyConfig.SR, rng(m_enemyConfig.VMIN, m_enemyConfig.VMAX),
-      sf::Color(rng(0, 255), rng(0, 255), rng(0, 255)),
+      sf::Color(rng(1, 255), rng(1, 255), rng(1, 255)),
       sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB), m_enemyConfig.OT);
 
   enemy_entity->cCollission = std::make_shared<CCollision>(m_enemyConfig.CR);
@@ -325,8 +325,8 @@ void Game::sCollision()
     float r2 = e->cCollission->radius;
     if ((dv.x * dv.x + dv.y * dv.y) < (r1 * r2 + r1 * r2))
     {
-      std::cout << "We have a collison ";
-      // m_player->destroy();
+      m_player->destroy();
+      spawnPlayer();
     }
   }
   // bullet enemy collision
@@ -349,10 +349,10 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-  // todo: code which implements enemy spawning should go here
-  // if (60 < m_currentFrame - m_lastEnemySpawnTime) {
-  // spawnEnemy();
-  // }
+  if(m_spawnInterval < m_currentFrame - m_lastEnemySpawnTime)
+  {
+    spawnEnemy();
+  }
 }
 
 void Game::sGUI()
@@ -482,6 +482,7 @@ void Game::sUserInput()
 int Game::rng(int min, int max)
 {
   std::srand((unsigned)std::time(NULL));
-  int rand_val = min + (rand() % max);
+  int rand_val = min + (rand() % (1 + max - min));
+  std::cout << "Random value: " << rand_val << std::endl;
   return rand_val;
 }
