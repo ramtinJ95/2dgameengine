@@ -1,7 +1,10 @@
 #include "Entity.h"
+#include <tuple>
 
 Entity::Entity(const size_t i, const std::string &t) : m_id(i), m_tag(t)
 {
+  m_components = std::make_tuple(CTransform(), CLifespan(), CInput(), CBoundingBox(), CAnimation(),
+                                 CGravity(), CState());
 }
 
 bool Entity::isActive() const

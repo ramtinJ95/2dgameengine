@@ -9,11 +9,12 @@ typedef std::map<std::string, EntityVec> EntityMap;
 
 class EntityManager
 {
-  EntityVec m_entities;
-  EntityVec m_entitiesToAdd;
-  EntityMap m_entityMap;
-  size_t m_totalEntities = 0;
+  EntityVec m_entities;       // all entities
+  EntityVec m_entitiesToAdd;  // entities to add next update
+  EntityMap m_entityMap;      // map from entity tag to vectors
+  size_t m_totalEntities = 0; // total entities created
 
+  // helper function to avoid repeated code
   void removeDeadEntities(EntityVec &vec);
 
 public:

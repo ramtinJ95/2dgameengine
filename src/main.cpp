@@ -1,11 +1,9 @@
 #include <SFML/Graphics.hpp>
-#include <iostream>
-
-#include "Game.h"
+#include "GameEngine.h"
 
 int main()
 {
-  Game g("../src/config.txt");
+  GameEngine g("../src/config.txt");
   g.run();
   // Vec2 v1 = Vec2(3,2);
   // Vec2 v2 = Vec2(4,1);
